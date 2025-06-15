@@ -1,44 +1,42 @@
-````markdown
 # ⚙️ Virtualized Kubernetes Cluster with Vagrant + PowerShell
 
-This repository contains a Vagrant configuration and PowerShell automation script for setting up a local multi-node Kubernetes cluster using VirtualBox.
+This repository provides a fully automated setup for a 3-node Kubernetes cluster using Vagrant and PowerShell. It's designed for local development and testing environments using VirtualBox.
 
 ---
 
 ## 📋 Prerequisites
 
-Ensure you have the following installed:
+Before getting started, ensure the following tools are installed:
 
-- [VirtualBox](https://www.virtualbox.org/) (6.x or higher)
-- [Vagrant](https://www.vagrantup.com/) (2.2.x or higher)
-- [PowerShell 7+](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell) (on Windows/macOS/Linux)
-- OpenSSH (`ssh`, `ssh-copy-id`) available in your PowerShell environment
-- Git (optional, for cloning this repo)
+- [VirtualBox](https://www.virtualbox.org/) (v6.x or higher)
+- [Vagrant](https://www.vagrantup.com/) (v2.2.x or higher)
+- [PowerShell 7+](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell)
+- OpenSSH (`ssh`, `ssh-copy-id`) available in your system PATH
+- Git (optional, for cloning the repository)
 
 ---
 
 ## 🚀 Initial Setup Instructions
 
-1. **Clone this repository**:
+1. **Clone the Repository**
 
 ```bash
 git clone https://github.com/rajat0327/vagrant-cluster-setup.git
 cd vagrant-cluster-setup
 ```
 
-2. **Start the Virtual Machines**:
+2. **Start the Virtual Machines**
 
 ```bash
 vagrant up
 ```
 
-This provisions 3 VMs:
+This will bring up and provision the following VMs:
+- `master-1` (Kubernetes master)
+- `worker-1` (Kubernetes worker)
+- `worker-2` (Kubernetes worker)
 
-* `master-1` – Kubernetes master node
-* `worker-1` – Kubernetes worker node
-* `worker-2` – Kubernetes worker node
-
-3. **Verify VM Status**:
+3. **Verify the VM Status**
 
 ```bash
 vagrant status
@@ -46,40 +44,41 @@ vagrant status
 
 ---
 
-## 🛠️ Cluster Setup with PowerShell
+## 🛠️ Cluster Setup Using PowerShell
 
-Once the VMs are up and running:
+After the VMs are running:
 
-1. Open PowerShell in admin mode and run:
+1. Run the following command in PowerShell:
 
 ```powershell
 .\Setup-Cluster.ps1
 ```
 
-This script performs:
+### ✅ What This Script Does:
+- Generates and distributes SSH keys to all nodes
+- Sets up host aliases in `.bashrc`
+- Adds a custom MOTD (Welcome message)
+- Configures essential cluster properties
 
-* SSH key generation & distribution
-* Host alias setup in `.bashrc`
-* Custom MOTD banner setup for each node
-* Basic configuration for Kubernetes cluster networking
-
-💡 The script auto-detects and configures `master-1`, `worker-1`, and `worker-2` using their static IPs defined in the `Vagrantfile`.
+The script dynamically picks IPs and names from the Vagrantfile for full automation.
 
 ---
 
 ## 🔁 Common Vagrant Commands
 
-| Task                 | Command                 |
-| -------------------- | ----------------------- |
-| Start all VMs        | `vagrant up`            |
-| SSH into a VM        | `vagrant ssh <vm-name>` |
-| Stop all VMs         | `vagrant halt`          |
-| Suspend (pause) VMs  | `vagrant suspend`       |
-| Resume suspended VMs | `vagrant resume`        |
-| Reload VMs           | `vagrant reload`        |
-| Destroy all VMs      | `vagrant destroy`       |
-| Show status          | `vagrant status`        |
-| Re-run provisioning  | `vagrant provision`     |
+| Task                     | Command                            |
+|--------------------------|-------------------------------------|
+| Start all VMs            | `vagrant up`                       |
+| SSH into a VM            | `vagrant ssh <vm-name>`            |
+| Stop all VMs             | `vagrant halt`                     |
+| Suspend (pause) VMs      | `vagrant suspend`                  |
+| Resume suspended VMs     | `vagrant resume`                   |
+| Reload VMs               | `vagrant reload`                   |
+| Destroy all VMs          | `vagrant destroy`                  |
+| Show VM status           | `vagrant status`                   |
+| Re-run provisioning      | `vagrant provision`                |
+
+> ℹ️ Example: `vagrant ssh master-1`
 
 ---
 
@@ -87,9 +86,11 @@ This script performs:
 
 ```
 .
-├── Vagrantfile            # Defines 3-node cluster and provisioning shell scripts
-├── Setup-Cluster.ps1      # PowerShell automation to configure and secure the cluster
-└── README.md              # You're reading it!
+├── Vagrantfile            # Defines VMs and static IPs
+├── Setup-Cluster.ps1      # PowerShell script to configure the cluster
+└── README.md              # Project documentation
 ```
 
 ---
+
+
