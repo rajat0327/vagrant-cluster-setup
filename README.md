@@ -1,6 +1,6 @@
-# ⚙️ Virtualized Kubernetes Cluster with Vagrant + PowerShell
+# ⚙️ Virtualized Cluster with Vagrant + PowerShell
 
-This repository provides a fully automated setup for a 3-node Kubernetes cluster using Vagrant and PowerShell. It's designed for local development and testing environments using VirtualBox.
+This repository provides a fully automated setup for a 3-node cluster using Vagrant and PowerShell. It's designed for local development and testing environments using VirtualBox.
 
 ---
 
@@ -32,9 +32,9 @@ vagrant up
 ```
 
 This will bring up and provision the following VMs:
-- `master-1` (Kubernetes master)
-- `worker-1` (Kubernetes worker)
-- `worker-2` (Kubernetes worker)
+- `master-1`
+- `worker-1`
+- `worker-2`
 
 3. **Verify the VM Status**
 
