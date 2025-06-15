@@ -24,7 +24,7 @@ Ensure you have the following installed:
 ```bash
 git clone https://github.com/rajat0327/vagrant-cluster-setup.git
 cd vagrant-cluster-setup
-````
+```
 
 2. **Start the Virtual Machines**:
 
