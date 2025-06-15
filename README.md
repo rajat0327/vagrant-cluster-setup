@@ -93,4 +93,42 @@ The script dynamically picks IPs and names from the Vagrantfile for full automat
 
 ---
 
+## 💾 Backup and Restore
 
+You can back up and restore your Vagrant environment and VM data using the following approaches:
+
+### 🔐 Backup
+
+1. **Backup Vagrant State and Files**
+   - Compress the project directory:
+     ```bash
+     tar -czvf vagrant-cluster-backup.tar.gz <your-repo-name>/
+     ```
+
+2. **Snapshot Individual VMs (Optional)**
+   - Take a snapshot of a specific VM:
+     ```bash
+     vagrant snapshot save <vm-name> <snapshot-name>
+     ```
+     Example:
+     ```bash
+     vagrant snapshot save master-1 pre-k8s-setup
+     ```
+
+### ♻️ Restore
+
+1. **Restore from Snapshot**
+   - Restore a specific VM to a previous snapshot:
+     ```bash
+     vagrant snapshot restore <vm-name> <snapshot-name>
+     ```
+
+2. **Restore from Backup Archive**
+   - Extract the backup and re-initialize:
+     ```bash
+     tar -xzvf vagrant-cluster-backup.tar.gz
+     cd <your-repo-name>
+     vagrant up
+     ```
+
+> ⚠️ Snapshots are stored locally per machine and are not portable. For long-term backups or shared environments, use full project directory backup.
