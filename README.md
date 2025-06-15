@@ -102,7 +102,7 @@ You can back up and restore your Vagrant environment and VM data using the follo
 1. **Backup Vagrant State and Files**
    - Compress the project directory:
      ```bash
-     tar -czvf vagrant-cluster-backup.tar.gz <your-repo-name>/
+     tar -czvf vagrant-cluster-backup.tar.gz vagrant-cluster-setup/
      ```
 
 2. **Snapshot Individual VMs (Optional)**
@@ -127,7 +127,7 @@ You can back up and restore your Vagrant environment and VM data using the follo
    - Extract the backup and re-initialize:
      ```bash
      tar -xzvf vagrant-cluster-backup.tar.gz
-     cd <your-repo-name>
+     cd vagrant-cluster-setup
      vagrant up
      ```
 
