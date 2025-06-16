@@ -1,0 +1,142 @@
+require 'securerandom'
+
+Vagrant.configure("2") do |config|
+  # Master node
+  config.vm.define "master" do |node|
+    node.vm.box = "ubuntu/jammy64"
+    node.vm.hostname = "master"
+    node.vm.network "private_network", ip: "192.168.165.10"
+    node.vm.synced_folder ".", "/vagrant", disabled: true
+
+    # Port forwarding using Vagrant-native config
+    node.vm.network "forwarded_port", guest: 6443, host: 6443
+    node.vm.network "forwarded_port", guest: 2379, host: 2379
+    node.vm.network "forwarded_port", guest: 2380, host: 2380
+    node.vm.network "forwarded_port", guest: 10250, host: 10250
+    node.vm.network "forwarded_port", guest: 10257, host: 10257
+    node.vm.network "forwarded_port", guest: 10259, host: 10259
+
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-master"
+      vb.cpus = 2
+      vb.memory = 2048
+      vb.customize ["modifyvm", :id, "--macaddress1", "080027D14A01"]
+      vb.customize ["modifyvm", :id, "--hardwareuuid", SecureRandom.uuid]
+    end
+
+    pubkey_path = File.expand_path("~/.ssh/id_rsa.pub")
+    if File.exist?(pubkey_path)
+      node.vm.provision "file", source: pubkey_path, destination: "/home/vagrant/id_rsa.pub"
+    end
+
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      sudo apt-get install -y ufw
+      sudo ufw default deny incoming
+      sudo ufw default allow outgoing
+      sudo ufw allow ssh
+      sudo ufw allow 6443/tcp
+      sudo ufw allow 2379:2380/tcp
+      sudo ufw allow 10250/tcp
+      sudo ufw allow 10257/tcp
+      sudo ufw allow 10259/tcp
+      sudo ufw --force enable
+      sudo systemctl enable ufw
+
+      if ! id -u rajat >/dev/null 2>&1; then
+          sudo adduser --disabled-password --gecos "" --shell /bin/bash rajat
+          echo 'rajat ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/rajat
+      fi
+
+      if [ -f /home/vagrant/id_rsa.pub ]; then
+          mkdir -p /home/rajat/.ssh
+          cat /home/vagrant/id_rsa.pub >> /home/rajat/.ssh/authorized_keys
+          chown -R rajat:rajat /home/rajat/.ssh
+          chmod 700 /home/rajat/.ssh
+          chmod 600 /home/rajat/.ssh/authorized_keys
+      fi
+
+      echo "
+192.168.165.10 master
+192.168.165.11 worker-1
+192.168.165.12 worker-2
+      " | sudo tee -a /etc/hosts
+
+      echo "
+alias m='ssh master'
+alias w1='ssh worker-1'
+alias w2='ssh worker-2'
+      " | sudo tee -a /home/vagrant/.bashrc
+    SHELL
+  end
+
+  # Worker nodes
+  ["worker-1", "worker-2"].each do |name|
+    config.vm.define name do |node|
+      node.vm.box = "ubuntu/jammy64"
+      node.vm.hostname = name
+      node.vm.synced_folder ".", "/vagrant", disabled: true
+      ip = name == "worker-1" ? "192.168.165.11" : "192.168.165.12"
+      node.vm.network "private_network", ip: ip
+      macaddress = name == "worker-1" ? "080027D14A02" : "080027D14A03"
+
+      # Port forwarding using Vagrant-native config
+      node.vm.network "forwarded_port", guest: 10250, host: name == "worker-1" ? 10251 : 10252
+      node.vm.network "forwarded_port", guest: 10256, host: name == "worker-1" ? 10261 : 10262
+      node.vm.network "forwarded_port", guest: 30000, host: name == "worker-1" ? 30001 : 30002, protocol: "tcp"
+      node.vm.network "forwarded_port", guest: 30000, host: name == "worker-1" ? 31001 : 31002, protocol: "udp"
+
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = "k8s-#{name}"
+        vb.cpus = 2
+        vb.memory = 2048
+        vb.customize ["modifyvm", :id, "--hardwareuuid", SecureRandom.uuid]
+        vb.customize ["modifyvm", :id, "--macaddress1", macaddress]
+      end
+
+      pubkey_path = File.expand_path("~/.ssh/id_rsa.pub")
+      if File.exist?(pubkey_path)
+        node.vm.provision "file", source: pubkey_path, destination: "/home/vagrant/id_rsa.pub"
+      end
+
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo apt-get update
+        sudo apt-get install -y ufw
+        sudo ufw default deny incoming
+        sudo ufw default allow outgoing
+        sudo ufw allow ssh
+        sudo ufw allow 10250/tcp
+        sudo ufw allow 10256/tcp
+        sudo ufw allow 30000:32767/tcp
+        sudo ufw allow 30000:32767/udp
+        sudo ufw --force enable
+        sudo systemctl enable ufw
+
+        if ! id -u rajat >/dev/null 2>&1; then
+          sudo adduser --disabled-password --gecos "" --shell /bin/bash rajat
+          echo 'rajat ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/rajat
+        fi
+
+        if [ -f /home/vagrant/id_rsa.pub ]; then
+          mkdir -p /home/rajat/.ssh
+          cat /home/vagrant/id_rsa.pub >> /home/rajat/.ssh/authorized_keys
+          chown -R rajat:rajat /home/rajat/.ssh
+          chmod 700 /home/rajat/.ssh
+          chmod 600 /home/rajat/.ssh/authorized_keys
+        fi
+
+        echo "
+192.168.165.10 master
+192.168.165.11 worker-1
+192.168.165.12 worker-2
+        " | sudo tee -a /etc/hosts
+
+        echo "
+alias m='ssh master'
+alias w1='ssh worker-1'
+alias w2='ssh worker-2'
+        " | sudo tee -a /home/vagrant/.bashrc
+      SHELL
+    end
+  end
+end
